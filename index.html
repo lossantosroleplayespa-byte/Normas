@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Los Santos RP | Panel Administrativo</title>
+    <title>Los Santos RP | Portal de Normas</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&display=swap" rel="stylesheet">
@@ -41,14 +41,15 @@
     <div id="sidebar" class="sidebar">
         <span style="float:right; cursor:pointer; font-size: 35px; color: var(--primary);" onclick="toggleSide()">×</span>
         <div class="sidebar-link" onclick="goTo('home')">INICIO</div>
-        <div class="sidebar-link" onclick="goTo('norms')">NORMATIVAS</div>
+        <div class="sidebar-link" onclick="goTo('norms')">REGLAMENTO</div>
         <div class="sidebar-link" onclick="openLogin()" style="color:var(--accent); margin-top:40px;">ADMIN PANEL</div>
     </div>
 
     <section id="view-home" class="view active">
         <img id="display-logo" src="" style="width:150px; height:150px; border-radius:50%; border: 3px solid var(--primary); margin-bottom:25px; display:none; object-fit: cover;">
-        <h1 id="display-title" style="font-size: 3rem; font-weight: 900; margin: 0;">LOS SANTOS RP</h1>
-        <p id="display-desc" style="opacity: 0.6;">Bienvenido al portal de reglas</p>
+        <h1 id="display-title" style="font-size: 3rem; font-weight: 900; margin: 0; text-align: center;">LOS SANTOS RP</h1>
+        <p id="display-desc" style="opacity: 0.6; text-align: center;">Bienvenido al portal de normativas del servidor.</p>
+        <button class="btn btn-ls" style="width:auto; margin-top: 20px;" onclick="goTo('norms')">VER REGLAMENTO</button>
     </section>
 
     <section id="view-norms" class="view">
@@ -65,12 +66,12 @@
         </div>
 
         <div id="t-post" class="admin-box">
-            <h3 id="form-h">Nueva Norma</h3>
-            <input type="text" id="p-cat" placeholder="Categoría (Ej: Normas Generales)">
+            <h3 id="form-h">Publicar Norma</h3>
+            <input type="text" id="p-cat" placeholder="Categoría (Ej: Normas Civiles)">
             <input type="text" id="p-tit" placeholder="Título (Ej: 1.1 RDM)">
             <textarea id="p-desc" rows="5" placeholder="Descripción..."></textarea>
             <input type="text" id="p-img" placeholder="URL Imagen (Opcional)">
-            <button id="btn-main" class="btn btn-ls" onclick="handlePost()">Guardar Norma</button>
+            <button id="btn-main" class="btn btn-ls" onclick="handlePost()">Guardar</button>
         </div>
 
         <div id="t-manage" class="admin-box" style="display:none">
@@ -81,12 +82,12 @@
         </div>
 
         <div id="t-settings" class="admin-box" style="display:none">
-            <h3>Ajustes de la Web</h3>
+            <h3>Ajustes Generales</h3>
             <input id="c-name" placeholder="Nombre Servidor">
-            <input id="c-desc" placeholder="Descripción corta">
-            <input id="c-logo" placeholder="URL del Logo">
+            <input id="c-desc" placeholder="Descripción">
+            <input id="c-logo" placeholder="URL Logo">
             <input type="password" id="c-pass" placeholder="Nueva Clave Admin">
-            <button class="btn btn-ls" onclick="saveConfig()">Guardar Todo</button>
+            <button class="btn btn-ls" onclick="saveConfig()">Guardar</button>
         </div>
     </section>
 
@@ -95,7 +96,6 @@
             <h2>STAFF LOGIN</h2>
             <input type="password" id="st-p" placeholder="Contraseña">
             <button class="btn btn-ls" onclick="checkLogin()">Entrar</button>
-            <button class="btn" style="background:none; margin-top:10px;" onclick="document.getElementById('login').style.display='none'">Cerrar</button>
         </div>
     </div>
 
@@ -112,7 +112,7 @@
         firebase.initializeApp(firebaseConfig);
         const fb = firebase.database();
 
-        let data = { config: {}, posts: {} };
+        let data = { config: { pass: "Lossantosadmin" }, posts: {} };
         fb.ref('/').on('value', snap => { if(snap.val()){ data = snap.val(); render(); }});
 
         function render() {
@@ -140,17 +140,17 @@
 
         function handlePost() {
             const cat = document.getElementById('p-cat').value, title = document.getElementById('p-tit').value, desc = document.getElementById('p-desc').value, img = document.getElementById('p-img').value;
-            if(!cat || !title || !desc) return alert("Faltan datos");
+            if(!cat || !title || !desc) return alert("Rellena los campos");
             fb.ref('posts').push({cat, title, desc, img});
-            alert("¡Publicado!");
+            alert("Publicado con éxito");
             document.querySelectorAll('#t-post input, #t-post textarea').forEach(i => i.value="");
         }
 
         function checkLogin() {
             const pass = document.getElementById('st-p').value;
-            const correctPass = (data.config && data.config.pass) ? data.config.pass : "Pampigod";
+            const correctPass = (data.config && data.config.pass) ? data.config.pass : "Lossantosadmin";
             if(pass === correctPass) { goTo('admin'); document.getElementById('login').style.display='none'; }
-            else { alert("Clave incorrecta. Prueba con: Pampigod"); }
+            else { alert("Clave incorrecta."); }
         }
 
         function delCategory(catName) { if(confirm("¿Borrar sección completa?")) { const p = data.posts; for(let id in p) { if(p[id].cat === catName) fb.ref(`posts/${id}`).remove(); }}}
@@ -158,7 +158,7 @@
         function saveConfig() { 
             const up = { name: document.getElementById('c-name').value, desc: document.getElementById('c-desc').value, logo: document.getElementById('c-logo').value };
             if(document.getElementById('c-pass').value) up.pass = document.getElementById('c-pass').value;
-            fb.ref('config').update(up); alert("Guardado");
+            fb.ref('config').update(up); alert("Ajustes guardados");
         }
         function logout() { goTo('home'); document.getElementById('st-p').value = ""; }
         function openLogin() { document.getElementById('login').style.display='flex'; toggleSide(); }
@@ -168,4 +168,3 @@
     </script>
 </body>
 </html>
- 
