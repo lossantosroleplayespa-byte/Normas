@@ -3,144 +3,210 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Los Santos RP | Portal de Normativas</title>
+    <title>Los Santos RP | Portal Normativo</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #0b101b; --primary: #00d2ff; --norms: #5865f2; --card: #161c2d; --text: #f1f5f9; --accent: #ff0055; }
-        body { margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); }
-        
-        /* HEADER & NAV */
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; position: fixed; top: 0; width: 100%; box-sizing: border-box; background: rgba(11, 16, 27, 0.95); backdrop-filter: blur(10px); z-index: 1000; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .sidebar { position: fixed; top: 0; right: -100%; width: 280px; height: 100%; background: var(--card); z-index: 2000; transition: 0.4s; padding: 60px 20px; box-shadow: -10px 0 30px rgba(0,0,0,0.5); }
+        :root { 
+            --bg: #03050a;
+            --primary: #7000ff; 
+            --secondary: #00d2ff;
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text: #ffffff; 
+        }
+
+        body { 
+            margin: 0; 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            overflow-x: hidden;
+        }
+
+        /* FONDO ANIMADO FUTURISTA */
+        .aurora-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1; background: radial-gradient(circle at 20% 30%, #1a0b2e 0%, transparent 40%),
+                                radial-gradient(circle at 80% 70%, #071a2e 0%, transparent 40%);
+            filter: blur(80px); opacity: 0.6;
+        }
+
+        /* HEADER GLASS */
+        .header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 20px 40px; position: fixed; top: 0; width: 100%; box-sizing: border-box; 
+            background: rgba(3, 5, 10, 0.7); backdrop-filter: blur(20px); 
+            z-index: 1000; border-bottom: 1px solid var(--glass-border);
+        }
+        .nav-brand { font-weight: 800; font-size: 20px; letter-spacing: 2px; background: linear-gradient(to right, #fff, var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        .sidebar { 
+            position: fixed; top: 0; right: -100%; width: 300px; height: 100%; 
+            background: rgba(10, 10, 15, 0.95); backdrop-filter: blur(30px);
+            z-index: 2000; transition: 0.5s cubic-bezier(0.77, 0, 0.175, 1); 
+            padding: 80px 30px; border-left: 1px solid var(--glass-border);
+        }
         .sidebar.open { right: 0; }
-        .sidebar-link { display: block; padding: 15px; color: white; text-decoration: none; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; }
+        .sidebar-link { display: block; padding: 18px; color: rgba(255,255,255,0.7); text-decoration: none; font-weight: 500; border-radius: 12px; margin-bottom: 5px; transition: 0.3s; }
+        .sidebar-link:hover { background: var(--glass); color: var(--secondary); }
 
         /* VISTAS */
-        .view { display: none; flex-direction: column; align-items: center; padding: 100px 20px 40px; min-height: 100vh; box-sizing: border-box; }
-        .view.active { display: flex; animation: fadeIn 0.3s ease; }
+        .view { display: none; flex-direction: column; align-items: center; padding: 140px 20px 60px; min-height: 100vh; box-sizing: border-box; }
+        .view.active { display: flex; animation: viewFade 0.6s ease; }
 
-        /* NORMAS */
-        .norm-item { margin: 10px; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); width: 100%; box-sizing: border-box; }
-        .norm-item h3 { margin: 0 0 8px 0; font-size: 16px; color: var(--primary); }
-        .norm-item p { margin: 0; font-size: 14px; opacity: 0.8; white-space: pre-line; line-height: 1.4; }
-        .norm-item img { width: 100%; border-radius: 8px; margin-top: 10px; max-height: 400px; object-fit: cover; }
+        /* NORMAS ESTILO GLASS */
+        .norm-item { 
+            margin: 10px 0; padding: 25px; background: var(--glass); 
+            border-radius: 20px; border: 1px solid var(--glass-border); 
+            width: 100%; box-sizing: border-box; backdrop-filter: blur(5px);
+        }
+        .norm-item h3 { margin: 0 0 12px 0; font-size: 18px; color: var(--secondary); font-weight: 700; }
+        .norm-item p { margin: 0; font-size: 15px; opacity: 0.8; line-height: 1.6; font-weight: 300; color: #e0e0e0; }
+        .norm-item img { width: 100%; border-radius: 15px; margin-top: 20px; border: 1px solid var(--glass-border); }
 
-        /* ACORDEONES */
-        .accordion { width: 100%; max-width: 850px; margin-bottom: 12px; background: var(--card); border-radius: 15px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }
-        .acc-header { padding: 18px; cursor: pointer; font-weight: 800; display: flex; justify-content: space-between; background: rgba(255,255,255,0.02); border-left: 4px solid var(--primary); }
-        .acc-content { max-height: 0; overflow: hidden; transition: 0.4s ease; display: grid; grid-template-columns: 1fr; gap: 5px; }
-        .accordion.open .acc-content { max-height: 15000px; padding: 15px; }
+        /* ACORDEONES SUAVES */
+        .accordion { width: 100%; max-width: 900px; margin-bottom: 15px; border-radius: 24px; border: 1px solid var(--glass-border); background: var(--glass); transition: 0.4s; }
+        .acc-header { padding: 24px; cursor: pointer; font-weight: 700; display: flex; justify-content: space-between; align-items: center; font-size: 16px; color: #fff; }
+        .acc-header span { transition: 0.4s; color: var(--secondary); }
+        .acc-content { max-height: 0; overflow: hidden; transition: 0.5s ease; padding: 0 24px; }
+        .accordion.open { background: rgba(255, 255, 255, 0.05); border-color: rgba(0, 210, 255, 0.3); }
+        .accordion.open .acc-content { max-height: 15000px; padding-bottom: 24px; }
+        .accordion.open .acc-header span { transform: rotate(180deg); }
 
-        /* ADMIN */
-        .admin-box { width: 100%; max-width: 650px; background: var(--card); padding: 25px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); margin-top: 10px; }
-        input, textarea, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; background: #0b101b; border: 1px solid #334155; color: white; box-sizing: border-box; }
-        .btn { border: none; border-radius: 10px; color: white; padding: 12px 20px; font-weight: 700; cursor: pointer; transition: 0.2s; }
-        .btn-main { background: linear-gradient(to right, var(--primary), #5865f2); }
+        /* BOTONES FUTURISTAS */
+        .btn { 
+            border: none; border-radius: 16px; color: white; padding: 16px 32px; 
+            font-weight: 700; cursor: pointer; transition: 0.4s; 
+            text-transform: uppercase; font-size: 12px; letter-spacing: 2px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .btn-main { 
+            background: linear-gradient(135deg, var(--primary), var(--secondary)); 
+            box-shadow: 0 8px 25px rgba(112, 0, 255, 0.3);
+        }
+        .btn-main:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(112, 0, 255, 0.5); }
+
+        /* INPUTS MODERNOS */
+        input, textarea, select { 
+            width: 100%; padding: 16px; margin: 12px 0; border-radius: 16px; 
+            background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); 
+            color: white; box-sizing: border-box; font-family: inherit; transition: 0.3s;
+        }
+        input:focus { border-color: var(--secondary); background: rgba(255,255,255,0.08); outline: none; }
+
+        .search-input { 
+            width: 90%; max-width: 500px; text-align: center; font-size: 16px; 
+            margin-bottom: 40px; background: rgba(255,255,255,0.03); backdrop-filter: blur(10px);
+        }
+
+        .overlay { position: fixed; inset: 0; background: rgba(3,5,10,0.95); z-index: 3000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(20px); }
         
-        .overlay { position: fixed; inset: 0; background: var(--bg); z-index: 3000; display: none; align-items: center; justify-content: center; flex-direction: column; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes viewFade { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .admin-box { width: 100%; max-width: 700px; background: rgba(255,255,255,0.02); padding: 40px; border-radius: 30px; border: 1px solid var(--glass-border); }
+
     </style>
 </head>
 <body>
 
+<div class="aurora-bg"></div>
+
 <header class="header">
-    <div id="cfg-nav-title" style="font-weight: 900; letter-spacing: 1px;">LOS SANTOS RP</div>
-    <div style="cursor:pointer; font-size: 24px;" onclick="toggleSide()">☰</div>
+    <div id="cfg-nav-title" class="nav-brand">LOS SANTOS RP</div>
+    <div style="cursor:pointer; font-size: 24px; color: var(--secondary);" onclick="toggleSide()">✦</div>
 </header>
 
 <div id="sidebar" class="sidebar">
-    <span style="float:right; cursor:pointer; font-size: 30px; color: var(--primary);" onclick="toggleSide()">×</span>
-    <div class="sidebar-link" onclick="goTo('home')">🏠 Inicio</div>
-    <div class="sidebar-link" onclick="goTo('norms')">📜 Normativas</div>
-    <div class="sidebar-link" onclick="openLogin()" style="color:var(--accent); border-top:1px solid #333; margin-top:20px;">⚙️ STAFF PANEL</div>
+    <span style="float:right; cursor:pointer; font-size: 30px; color: var(--secondary);" onclick="toggleSide()">×</span>
+    <div class="sidebar-link" onclick="goTo('home')">INICIO</div>
+    <div class="sidebar-link" onclick="goTo('norms')">REGLAMENTO</div>
+    <div style="height: 1px; background: var(--glass-border); margin: 20px 0;"></div>
+    <div class="sidebar-link" onclick="openLogin()" style="color: var(--secondary)">ADMIN PANEL</div>
 </div>
 
 <section id="view-home" class="view active">
-    <img id="display-logo" src="" style="width:120px; height:120px; border-radius:25px; margin-bottom:20px; display:none; object-fit: cover; border: 2px solid var(--primary);">
-    <h1 id="display-title" style="font-size: 2.5rem; text-align: center;">Cargando...</h1>
-    <p id="display-desc" style="opacity: 0.7; text-align: center; max-width: 500px;"></p>
+    <img id="display-logo" src="" style="width:140px; height:140px; border-radius:40px; margin-bottom:30px; display:none; object-fit: cover; border: 1px solid var(--glass-border); box-shadow: 0 20px 40px rgba(0,0,0,0.5);">
+    <h1 id="display-title" style="font-size: 3.5rem; font-weight: 800; margin: 0; text-align: center;">LOS SANTOS</h1>
+    <p id="display-desc" style="opacity: 0.5; font-size: 20px; margin-top: 10px; text-align: center; max-width: 600px;"></p>
     
-    <input type="text" style="width:90%; max-width:450px; border: 1px solid var(--primary);" placeholder="Buscar normativa..." onkeyup="globalSearch(this.value)">
+    <input type="text" class="search-input" placeholder="Buscar norma..." onkeyup="globalSearch(this.value)">
     
-    <button class="btn btn-main" style="padding: 15px 40px; font-size: 16px;" onclick="goTo('norms')">LEER REGLAMENTO</button>
+    <button class="btn btn-main" onclick="goTo('norms')">Explorar Normas</button>
 </section>
 
 <section id="view-norms" class="view">
-    <h2 style="color: var(--primary); margin-bottom:30px;">📜 REGLAMENTO COMPLETO</h2>
-    <div id="render-norms" style="width:100%; max-width: 850px;"></div>
+    <h2 style="margin-bottom:40px; font-weight: 800; font-size: 2rem;">REGLAMENTO</h2>
+    <div id="render-norms" style="width:100%; max-width: 900px;"></div>
 </section>
 
 <section id="view-admin" class="view">
-    <div id="staff-info-bar" style="background:var(--primary); padding:10px 25px; border-radius:30px; font-size:12px; font-weight:800; margin-bottom:20px; color:#000;"></div>
+    <div id="staff-info-bar" style="background: var(--glass); border: 1px solid var(--glass-border); padding: 12px 30px; border-radius: 100px; font-size: 11px; letter-spacing: 1px; font-weight: 600; margin-bottom: 30px; color: var(--secondary);"></div>
     
-    <div style="display:flex; gap:8px; margin-bottom:20px; overflow-x:auto; width:100%; max-width:750px; padding: 10px;">
-        <button class="btn btn-main" onclick="tab('t-norms')">Publicar Norma</button>
-        <button class="btn btn-main" style="background:#444" onclick="tab('t-design')">Ajustes Web</button>
-        <button class="btn btn-main" style="background:#222" onclick="protectedTab('t-hooks')">Webhooks 🔒</button>
-        <button class="btn btn-main" style="background:#222" onclick="protectedTab('t-pass')">Seguridad 🔒</button>
-        <button class="btn" style="background:var(--accent)" onclick="location.reload()">Cerrar Sesión</button>
+    <div style="display:flex; gap:12px; margin-bottom:40px; overflow-x:auto; width:100%; max-width:800px; padding: 10px; justify-content: center;">
+        <button class="btn btn-main" onclick="tab('t-norms')">Publicar</button>
+        <button class="btn" style="background:var(--glass)" onclick="tab('t-design')">Ajustes</button>
+        <button class="btn" style="background:var(--glass)" onclick="protectedTab('t-hooks')">Logs</button>
+        <button class="btn" style="background:var(--glass)" onclick="protectedTab('t-pass')">Clave</button>
+        <button class="btn" style="background: rgba(255,0,0,0.1); color: #ff5555" onclick="location.reload()">Cerrar</button>
     </div>
 
     <div id="t-norms" class="admin-box">
-        <h3>1. Crear Categoría</h3>
-        <input type="text" id="cat-n-name" placeholder="Ej: Normas Civiles">
-        <button class="btn btn-main" style="width:100%" onclick="addCat()">Crear Sección</button>
-        <hr style="opacity:0.1; margin:25px 0">
-        <h3>2. Publicar/Editar Artículo</h3>
+        <h3 style="color:var(--secondary)">Nueva Sección</h3>
+        <input type="text" id="cat-n-name" placeholder="Ej: Código Penal">
+        <button class="btn btn-main" style="width:100%" onclick="addCat()">Añadir Sección</button>
+        <hr style="opacity:0.1; margin:40px 0">
+        <h3 style="color:var(--secondary)">Nueva Norma</h3>
         <select id="dest-norms"></select>
-        <input type="text" id="item-t-norms" placeholder="Título (Ej: 1.1 RDM)">
-        <textarea id="item-d-norms" rows="4" placeholder="Descripción de la norma..."></textarea>
-        <input type="text" id="item-img-norms" placeholder="URL de Imagen (Opcional)">
-        <button class="btn btn-main" style="width:100%" onclick="addItem()">Guardar Artículo</button>
-        
-        <div id="manage-norms" style="margin-top:25px"></div>
+        <input type="text" id="item-t-norms" placeholder="Título">
+        <textarea id="item-d-norms" rows="4" placeholder="Descripción..."></textarea>
+        <input type="text" id="item-img-norms" placeholder="URL Imagen">
+        <button class="btn btn-main" style="width:100%" onclick="addItem()">Guardar Norma</button>
+        <div id="manage-norms" style="margin-top:40px"></div>
     </div>
 
     <div id="t-design" class="admin-box" style="display:none">
-        <h3>Personalización</h3>
-        <label>Nombre del Servidor:</label><input type="text" id="cfg-t">
-        <label>Eslogan/Descripción:</label><input type="text" id="cfg-d">
-        <label>URL Logo (Imgur/Discord):</label><input type="text" id="cfg-l">
-        <button class="btn btn-main" style="width:100%" onclick="saveDesign()">Actualizar Portal</button>
+        <h3>Identidad</h3>
+        <input type="text" id="cfg-t" placeholder="Nombre Servidor">
+        <input type="text" id="cfg-d" placeholder="Descripción">
+        <input type="text" id="cfg-l" placeholder="URL Logo">
+        <button class="btn btn-main" style="width:100%" onclick="saveDesign()">Guardar</button>
     </div>
 
     <div id="t-hooks" class="admin-box" style="display:none">
-        <h3>Discord Logs</h3>
-        <p style="font-size: 12px; opacity: 0.6;">Pega la URL del Webhook de Discord para registrar acciones del Staff.</p>
+        <h3>Logs de Discord</h3>
         <input type="text" id="cfg-h" placeholder="URL Webhook">
-        <button class="btn btn-main" style="width:100%" onclick="saveHook()">Vincular Discord</button>
+        <button class="btn btn-main" style="width:100%" onclick="saveHook()">Vincular</button>
     </div>
 
     <div id="t-pass" class="admin-box" style="display:none">
-        <h3>Cambiar Contraseña</h3>
-        <input type="password" id="cfg-p" placeholder="Nueva Clave Maestra">
-        <button class="btn btn-main" style="width:100%" onclick="savePass()">Actualizar Seguridad</button>
+        <h3>Clave Maestra</h3>
+        <input type="password" id="cfg-p" placeholder="Nueva Contraseña">
+        <button class="btn btn-main" style="width:100%" onclick="savePass()">Actualizar</button>
     </div>
 </section>
 
 <div id="login" class="overlay">
-    <div class="admin-box" style="max-width:340px; text-align:center;">
-        <h2 style="color:var(--primary)">STAFF ACCESS</h2>
-        <input type="text" id="st-name" placeholder="Tu Nombre">
-        <input type="text" id="st-range" placeholder="Tu Rango">
+    <div class="admin-box" style="max-width:360px; text-align:center;">
+        <h2 style="margin-bottom:30px; font-weight: 800;">STAFF LOGIN</h2>
+        <input type="text" id="st-name" placeholder="Usuario">
+        <input type="text" id="st-range" placeholder="Rango">
         <input type="password" id="st-pass" placeholder="Contraseña">
-        <button class="btn btn-main" style="width:100%; margin-top:10px;" onclick="checkLogin()">IDENTIFICARSE</button>
-        <p onclick="closeLogin()" style="cursor:pointer; opacity:0.5; margin-top:15px;">Volver al Inicio</p>
+        <button class="btn btn-main" style="width:100%; margin-top:20px;" onclick="checkLogin()">IDENTIFICARSE</button>
+        <p onclick="closeLogin()" style="cursor:pointer; opacity:0.5; margin-top:25px; font-size: 12px;">CERRAR</p>
     </div>
 </div>
 
 <div id="second-login" class="overlay">
     <div class="admin-box" style="max-width:300px; text-align:center;">
-        <h3>🔑 Confirmar Clave</h3>
-        <input type="password" id="pass-2" placeholder="Introduce la contraseña">
-        <button class="btn btn-main" style="width:100%" onclick="verifyProtected()">DESBLOQUEAR</button>
+        <h3>🔑 SEGURIDAD</h3>
+        <input type="password" id="pass-2" placeholder="Clave Maestra">
+        <button class="btn btn-main" style="width:100%" onclick="verifyProtected()">VERIFICAR</button>
     </div>
 </div>
 
 <script>
-    // NUEVA NUBE LOS SANTOS RP
     const firebaseConfig = {
       apiKey: "AIzaSyDdcVV-trnP7VE70kYw7kqZmpTJ3ISceTc",
       authDomain: "los-santos-rp-5a0a8.firebaseapp.com",
@@ -159,11 +225,7 @@
 
     fb.ref('/').on('value', (snap) => {
         const d = snap.val();
-        if(d) {
-            appData = d;
-            if(!appData.norms) appData.norms = [];
-            render();
-        }
+        if(d) { appData = d; if(!appData.norms) appData.norms = []; render(); }
     });
 
     async function sendLog(title, desc) {
@@ -173,12 +235,8 @@
             headers: {'Content-Type': 'application/json'}, 
             body: JSON.stringify({
                 embeds: [{ 
-                    title, description: desc, color: 52479, 
-                    fields: [
-                        {name: "Staff", value: staffActive.name, inline: true}, 
-                        {name: "Rango", value: staffActive.range, inline: true}
-                    ], 
-                    footer: { text: "Los Santos RP Logs" },
+                    title, description: desc, color: 7340287, 
+                    fields: [{name: "Staff", value: staffActive.name, inline: true}, {name: "Rango", value: staffActive.range, inline: true}], 
                     timestamp: new Date() 
                 }]
             })
@@ -197,18 +255,17 @@
         const correct = (appData.config && appData.config.pass) ? appData.config.pass : "Lossantosadmin";
         if(p === correct && n && r) {
             staffActive = { name: n, range: r };
-            document.getElementById('staff-info-bar').innerText = `MODO ADMINISTRADOR: ${n.toUpperCase()} [${r.toUpperCase()}]`;
+            document.getElementById('staff-info-bar').innerText = `OPERATIVO: ${n.toUpperCase()} | ${r.toUpperCase()}`;
             closeLogin(); goTo('admin');
-            sendLog("🔐 Inicio de Sesión", "Un miembro del staff ha accedido al panel.");
-        } else { alert("Datos incorrectos"); }
+            sendLog("🔐 Panel Accedido", "Staff entró al sistema.");
+        } else { alert("Datos incorrectos."); }
     }
 
     function protectedTab(id) { pendingTab = id; document.getElementById('second-login').style.display='flex'; }
     function verifyProtected() {
         const correct = (appData.config && appData.config.pass) ? appData.config.pass : "Lossantosadmin";
-        if(document.getElementById('pass-2').value === correct) { 
-            document.getElementById('second-login').style.display='none'; tab(pendingTab); 
-        } else { alert("Clave Incorrecta"); }
+        if(document.getElementById('pass-2').value === correct) { document.getElementById('second-login').style.display='none'; tab(pendingTab); }
+        else { alert("Error"); }
     }
 
     function addCat() {
@@ -217,7 +274,7 @@
         const list = appData.norms || [];
         list.push({ name: val, items: [] });
         fb.ref('norms').set(list);
-        sendLog("📁 Categoría Creada", `Se creó la sección: **${val}**`);
+        sendLog("📁 Nueva Sección", `Creada: **${val}**`);
         document.getElementById('cat-n-name').value = "";
     }
 
@@ -226,30 +283,29 @@
         const t = document.getElementById('item-t-norms').value;
         const d = document.getElementById('item-d-norms').value;
         const img = document.getElementById('item-img-norms').value;
-        if(!t || !d || idx === "") return alert("Faltan datos o no hay categoría");
+        if(!t || !d || idx === "") return alert("Faltan datos.");
         if(!appData.norms[idx].items) appData.norms[idx].items = [];
         appData.norms[idx].items.push({ title: t, desc: d, img });
         fb.ref(`norms/${idx}/items`).set(appData.norms[idx].items);
-        sendLog("📝 Norma Publicada", `Norma: **${t}** en la sección **${appData.norms[idx].name}**`);
+        sendLog("📝 Norma Creada", `Norma: **${t}** en **${appData.norms[idx].name}**`);
         document.getElementById('item-t-norms').value = ""; document.getElementById('item-d-norms').value = "";
     }
 
-    function delI(ci, ii) { if(confirm("¿Borrar norma?")) { appData.norms[ci].items.splice(ii, 1); fb.ref(`norms/${ci}/items`).set(appData.norms[ci].items); }}
-    function delC(ci) { if(confirm("¿Borrar sección completa?")) { appData.norms.splice(ci, 1); fb.ref('norms').set(appData.norms); }}
+    function delI(ci, ii) { if(confirm("¿Borrar?")) { appData.norms[ci].items.splice(ii, 1); fb.ref(`norms/${ci}/items`).set(appData.norms[ci].items); }}
+    function delC(ci) { if(confirm("¿Borrar sección?")) { appData.norms.splice(ci, 1); fb.ref('norms').set(appData.norms); }}
 
     function saveDesign() {
         const up = { title: document.getElementById('cfg-t').value, desc: document.getElementById('cfg-d').value, logo: document.getElementById('cfg-l').value };
-        fb.ref('config').update(up);
-        alert("¡Web Actualizada!");
+        fb.ref('config').update(up); alert("Guardado");
     }
-    function saveHook() { fb.ref('config/hook').set(document.getElementById('cfg-h').value); alert("Webhook Vinculado"); }
-    function savePass() { fb.ref('config/pass').set(document.getElementById('cfg-p').value); alert("Contraseña Maestra actualizada"); }
+    function saveHook() { fb.ref('config/hook').set(document.getElementById('cfg-h').value); alert("Vinculado"); }
+    function savePass() { fb.ref('config/pass').set(document.getElementById('cfg-p').value); alert("Contraseña cambiada"); }
 
     function render() {
         const cfg = appData.config || {};
-        document.getElementById('display-title').innerText = cfg.title || "Los Santos RP";
-        document.getElementById('display-desc').innerText = cfg.desc || "Reglamento oficial del servidor";
-        document.getElementById('cfg-nav-title').innerText = (cfg.title || "Los Santos RP").toUpperCase();
+        document.getElementById('display-title').innerText = cfg.title || "LOS SANTOS";
+        document.getElementById('display-desc').innerText = cfg.desc || "Portal de Normativas";
+        document.getElementById('cfg-nav-title').innerText = (cfg.title || "LOS SANTOS").toUpperCase();
         if(cfg.logo) { document.getElementById('display-logo').src = cfg.logo; document.getElementById('display-logo').style.display = 'block'; }
 
         const renderCont = document.getElementById('render-norms');
@@ -265,12 +321,12 @@
                     ${it.img ? `<img src="${it.img}">` : ''}
                 </div>`).join('');
 
-            renderCont.innerHTML += `<div class="accordion"><div class="acc-header" onclick="this.parentElement.classList.toggle('open')">${cat.name} <span>▼</span></div><div class="acc-content">${itemsHtml}</div></div>`;
+            renderCont.innerHTML += `<div class="accordion"><div class="acc-header" onclick="this.parentElement.classList.toggle('open')">${cat.name} <span>▾</span></div><div class="acc-content">${itemsHtml}</div></div>`;
             
-            manageCont.innerHTML += `<div style="background:#0b101b; padding:12px; margin-top:10px; border-radius:10px; border-left: 3px solid var(--primary);">
-                <b>${cat.name}</b> <span onclick="delC(${ci})" style="float:right; color:var(--accent); cursor:pointer; font-size:11px;">Eliminar Categoría</span>
-                ${(cat.items || []).map((it, ii) => `<div style="margin-top:8px; font-size:12px; opacity:0.7">${it.title} 
-                    <span onclick="delI(${ci},${ii})" style="color:red; cursor:pointer; margin-left:10px">X</span></div>`).join('')}
+            manageCont.innerHTML += `<div style="background:rgba(255,255,255,0.03); padding:20px; margin-top:15px; border-radius:15px; border: 1px solid var(--glass-border);">
+                <b style="color:var(--secondary)">${cat.name}</b> <span onclick="delC(${ci})" style="float:right; color:#ff5555; cursor:pointer; font-size:10px;">ELIMINAR</span>
+                ${(cat.items || []).map((it, ii) => `<div style="margin-top:10px; font-size:12px; opacity:0.6; display:flex; justify-content:space-between;"><span>• ${it.title}</span> 
+                    <span onclick="delI(${ci},${ii})" style="color:#ff5555; cursor:pointer;">X</span></div>`).join('')}
             </div>`;
         });
     }
